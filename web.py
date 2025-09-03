@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 
 # ตั้งค่าหน้าเว็บ
@@ -19,7 +19,7 @@ st.set_page_config(page_title="📈 Youtube Analytics Tendency")
 
 # ============= RESOURCE ==================
 
-## ============= MODEL============
+## ============= MODEL==================
 df_clean = pd.read_excel('DatasetwithActual.xlsx')
 
 # Features and target
@@ -47,6 +47,10 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_
 
 # Train
 model.fit(X_train, y_train)
+#=========================================
+
+
+
 
 ## ========= CATEGORIESLABEL ===========
 CategoriesLabel = ['People & Blogs', 'Entertainment', 'Science & Technology',
@@ -199,5 +203,25 @@ if show_data:
         
     else :
         st.dataframe(train_df, use_container_width=True)
+
+        # ============== BASIC DATA ================
+    y_pred = model.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+
+    ## Columns
+    col1 ,col2 = st.columns([2,1])
+    with col1:
+        st.markdown(
+            f"""<div class="card"">
+            <h5>📑 Dataset</h5><p style="font-size:18px;"> Rows : {df_clean.shape[0]} <br>  Columns : {df_clean.shape[1]}</p></div>""",
+            unsafe_allow_html=True
+        )
+    with col2 :
+            st.markdown(
+            f"""<div class="card">
+            <h5>🎯 Accuracy</h5><p style="font-size:36px">{acc *100:.2f} % </p></div>""",
+            unsafe_allow_html=True
+        )
+    # ==========================================
 # =============================================
 
