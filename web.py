@@ -14,7 +14,7 @@ st.set_page_config(page_title="📈 Youtube Analytics Tendency")
 # ============= RESOURCE ==================
 
 ## ============= MODEL============
-model = jl.load("modelsAndDataset\model.pkl")
+model = jl.load("model.pkl")
 
 ## ========= CATEGORIESLABEL ===========
 CategoriesLabel = ['People & Blogs', 'Entertainment', 'Science & Technology',
@@ -22,7 +22,7 @@ CategoriesLabel = ['People & Blogs', 'Entertainment', 'Science & Technology',
        'News & Politics', 'Music', 'Film & Animation']
 
 ## ============== DATASET ================
-train_df = pd.read_excel('modelsAndDataset\Dataset.xlsx')
+train_df = pd.read_excel('Dataset.xlsx')
 #=========================================
 
 # ============================
@@ -74,7 +74,7 @@ isUploadFile = st.toggle("Upload File ?" )
 if isUploadFile:
     #Example Data
     with st.expander("Example of Dataset"):
-        example_df = pd.read_excel('modelsAndDataset\Example.xlsx')
+        example_df = pd.read_excel('Example.xlsx')
         st.dataframe(example_df)
 
     # Upload file
