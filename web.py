@@ -1,8 +1,10 @@
 #Import Library
+from sklearn.metrics import r2_score
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib as jl
+from sklearn.metrics import accuracy_score
 
 
 # ตั้งค่าหน้าเว็บ
@@ -15,10 +17,12 @@ st.set_page_config(page_title="📈 Youtube Analytics Tendency")
 model = jl.load("models & Dataset\model.pkl")
 
 ## ========= CATEGORIESLABEL ===========
-CategoriesLabel = ['Nonprofits & Activism', 'People & Blogs', 'Entertainment',
-       'News & Politics', 'Science & Technology', 'Education', 'Music',
-       'Travel & Events', 'Film & Animation', 'Sports', 'Gaming',
-       'Comedy', 'Howto & Style']
+CategoriesLabel = ['People & Blogs', 'Entertainment', 'Science & Technology',
+       'Howto & Style', 'Education', 'Pets & Animals', 'Gaming', 'Sports',
+       'News & Politics', 'Music', 'Film & Animation']
+
+## ============== DATASET ================
+train_df = pd.read_excel('models & Dataset\Dataset.xlsx')
 #=========================================
 
 # ============================
@@ -32,12 +36,21 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         margin-bottom: 20px;
         text-align: center;
+        color : white;
     }
 
     label, .stTextInput label, .stNumberInput label, .stTextArea label {
         text-align: left; 
         display: block; 
     }
+            
+    .stExpander{
+        background-color : #cc0000 ;
+        color : white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        border-radius: 12px;
+    }
+            
     </style>
 """, unsafe_allow_html=True)
 # ============================
@@ -54,51 +67,80 @@ st.title("📝 Enter video details to predict popularity")
 
 
 
-# =========== หัวข้อ input ===========
-# Title
-videoTitle = st.text_input("🎬 Video Title 🎬")
 
-# Description
-videoDescription = st.text_area("🖊️ Description 🖊️")
 
-# Category
-videoCategoryLabel = st.selectbox(
-    "📂 Category 📂",
-    CategoriesLabel
-)
+isUploadFile = st.toggle("Upload File ?" )
 
-# Duration (Seconds)
-durationSec = st.number_input("⏱️ Duration (seconds) ⏱️", min_value=1, step=1)
-# ===================================
+if isUploadFile:
+    #Example Data
+    with st.expander("Example of Dataset"):
+        example_df = pd.read_excel('models & Dataset\Example.xlsx')
+        st.dataframe(example_df)
+
+    # Upload file
+    uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx", "txt"])
+else :
+    uploaded_file = None
+    # =========== หัวข้อ input ===========
+    # Title
+    videoTitle = st.text_input("🎬 Video Title 🎬")
+
+    # Description
+    videoDescription = st.text_area("🖊️ Description 🖊️")
+
+    # Category
+    videoCategoryLabel = st.selectbox(
+        "📂 Category 📂",
+        CategoriesLabel
+    )
+
+    # Duration (Seconds)
+    durationSec = st.number_input("⏱️ Duration (seconds) ⏱️", min_value=1, step=1)
+    # ===================================
 
 # ===========ปุ่ม===========
 button = st.button("Predict")
 
 if button :
-    # Convert to Dataframe
-    # Feature : "videoTitle", "videoDescription", "videoCategoryLabel", "durationSec" 
-    data = {
-        "videoTitle": [videoTitle],
-        "videoDescription": [videoDescription],
-        "videoCategoryLabel": [videoCategoryLabel],
-        "durationSec": [durationSec]
-    }
-    data = pd.DataFrame(data)
+    if uploaded_file is not None:
+        st.write("✅ File uploaded:", uploaded_file.name)
 
-    #Predict
-    predict_answer = model.predict(data)
+        # If CSV
+        if uploaded_file.name.endswith(".csv"):
+            df = pd.read_csv(uploaded_file)
 
-    # Display Predict
-    if predict_answer == 1 :
-        st.success("Your video is trend 🔥")
+        # If Excel
+        elif uploaded_file.name.endswith(".xlsx"):
+            df = pd.read_excel(uploaded_file)
+
+        df['Predict'] = model.predict(df)
+
+        st.dataframe(df)
+
     else :
-        st.warning("Your video is not trend 😥")
-# ========================
+        # Convert to Dataframe
+        # Feature : "videoTitle", "videoDescription", "videoCategoryLabel", "durationSec" 
+        data = {
+            "videoTitle": [videoTitle],
+            "videoDescription": [videoDescription],
+            "videoCategoryLabel": [videoCategoryLabel],
+            "durationSec": [durationSec]
+        }
+        data = pd.DataFrame(data)
+
+        #Predict
+        predict_answer = model.predict(data)
+
+        # Display Predict
+        if predict_answer == 1 :
+            st.success("Your video is trend 🔥")
+        else :
+            st.warning("Your video is not trend 😥")
+# ====================================
 
 # =============== Dataset =====================
-train_df = pd.read_excel('models & Dataset\Dataset.xlsx')
 # Toggle switch
-show_data = st.toggle("Show dataset")
+show_data = st.toggle("Show training dataset")
 
 # Condition
 if show_data:
