@@ -1,10 +1,16 @@
 #Import Library
-from sklearn.metrics import r2_score
 import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib as jl
-from sklearn.metrics import accuracy_score
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
 
 
 # ตั้งค่าหน้าเว็บ
@@ -14,7 +20,33 @@ st.set_page_config(page_title="📈 Youtube Analytics Tendency")
 # ============= RESOURCE ==================
 
 ## ============= MODEL============
-model = jl.load("model.pkl")
+df_clean = pd.read_excel('DatasetwithActual.xlsx')
+
+# Features and target
+X = df_clean[["videoTitle", "videoDescription", "videoCategoryLabel", "durationSec"]]
+y = df_clean["hot"]
+
+# Preprocessing pipeline
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("title_tfidf", TfidfVectorizer(stop_words="english", max_features=1000), "videoTitle"),
+        ("desc_tfidf", TfidfVectorizer(stop_words="english", max_features=1000), "videoDescription"),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), ["videoCategoryLabel"]),
+        ("duration", StandardScaler(), ["durationSec"]),
+    ]
+)
+
+# Full pipeline: preprocessing + classifier
+model = Pipeline([
+    ("preprocessor", preprocessor),
+    ("classifier", LogisticRegression(max_iter=1000))
+])
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=42)
+
+# Train
+model.fit(X_train, y_train)
 
 ## ========= CATEGORIESLABEL ===========
 CategoriesLabel = ['People & Blogs', 'Entertainment', 'Science & Technology',
@@ -101,6 +133,7 @@ else :
 # ===========ปุ่ม===========
 button = st.button("Predict")
 
+
 if button :
     if uploaded_file is not None:
         st.write("✅ File uploaded:", uploaded_file.name)
@@ -118,6 +151,7 @@ if button :
         st.dataframe(df)
 
     else :
+
         # Convert to Dataframe
         # Feature : "videoTitle", "videoDescription", "videoCategoryLabel", "durationSec" 
         data = {
@@ -136,6 +170,7 @@ if button :
             st.success("Your video is trend 🔥")
         else :
             st.warning("Your video is not trend 😥")
+
 # ====================================
 
 # =============== Dataset =====================
